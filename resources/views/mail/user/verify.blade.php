@@ -1,0 +1,1 @@
+Email verify link: {{ $url }}

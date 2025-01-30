@@ -1,0 +1,78 @@
+version: '3'
+
+networks:
+    backend:
+
+services:
+    nginx:
+        build:
+            context: ./
+            dockerfile: nginx/Dockerfile
+        restart: always
+        container_name: nginx
+        volumes:
+            - ../../:/var/www/yazu_links
+            - ./nginx/conf.d:/etc/nginx/conf.d
+        ports:
+            - "8000:80"
+        networks:
+            - backend
+        depends_on:
+            - app
+    app:
+        build:
+            context: ./
+            dockerfile: app/Dockerfile
+        container_name: yazu_app
+        restart: always
+        volumes:
+            - ../../:/var/www/yazu_links
+            - ./app/php.conf:/usr/local/etc/php-fpm.d/www.conf
+        links:
+            - postgres
+            - redis
+        depends_on:
+            - postgres
+            - redis
+            - php-queue
+        networks:
+            - backend
+    php-queue:
+        build:
+            context: ./
+            dockerfile: app/Dockerfile
+        container_name: app_queue
+        restart: always
+        volumes:
+            - ../../:/var/www/yazu_links
+        links:
+            - postgres
+            - redis
+        networks:
+            - backend
+        command: [ "./docker/local/entrypoint.sh" ]
+    postgres:
+        image: postgres:15.4-alpine
+        restart: always
+        container_name: postgres
+        environment:
+            - POSTGRES_USER=root
+            - POSTGRES_PASSWORD=Bb103ecc!
+            - POSTGRES_DB=links_xYazu
+        volumes:
+            - ../../../data/postgres/data:/var/lib/postgresql/data
+            - ../../../data/postgres/storage:/var/lib/postgresql/storage
+        networks:
+            - backend
+        ports:
+            - "5432:5432"
+    redis:
+        restart: always
+        image: redis:7.0.12-alpine
+        container_name: redis
+        volumes:
+            - ../../../data/redis:/data
+        networks:
+            - backend
+        ports:
+            - "6379:6379"

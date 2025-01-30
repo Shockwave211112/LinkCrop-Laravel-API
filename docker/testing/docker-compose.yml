@@ -1,0 +1,38 @@
+version: '3'
+
+networks:
+    backend:
+
+services:
+    postgres:
+        image: postgres:15.4-alpine
+        container_name: test-postgres
+        env_file:
+            - $test_postgres_env
+        networks:
+            - backend
+        ports:
+            - "5480:5432"
+    redis:
+        image: redis:7.0.12-alpine
+        container_name: test-redis
+        networks:
+            - backend
+        ports:
+            - "6380:6379"
+    app:
+        build:
+            context: ../../
+            dockerfile: docker/testing/app/Dockerfile
+        container_name: test-app
+        environment:
+            - APP_ENV=testing
+        links:
+            - postgres
+            - redis
+        depends_on:
+            - postgres
+            - redis
+        networks:
+            - backend
+        command: [ "./docker/testing/entrypoint.sh" ]

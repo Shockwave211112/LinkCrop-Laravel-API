@@ -1,0 +1,1198 @@
+openapi: 3.0.3
+info:
+  title: Links
+  version: 0.0.1
+servers:
+  - url: http://localhost:8000/
+tags:
+  - name: auth
+    description: Действия с авторизацией
+  - name: user
+    description: CRUD пользователей
+  - name: links
+    description: CRUD ссылок
+  - name: groups
+    description: CRUD групп
+  - name: permissions
+    description: Операции с правами
+paths:
+  /auth/login:
+    post:
+      tags:
+        - auth
+      summary: Авторизация
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        '200':
+          description: Успешный вход
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserToken'
+        '403':
+          description: Неправильные данные
+        '404':
+          description: Пользователь не существует
+        '422':
+          description: Ошибка валидации данных
+  /auth/registration:
+    post:
+      tags:
+        - auth
+      summary: Регистрация
+      requestBody:
+        content:
+          application/json:
+            schema:
+                type: object
+                properties:
+                  message:
+                     type: string
+        required: true
+      responses:
+        '200':
+          description: Успешная регистрация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserToken'
+        '422':
+          description: Ошибка валидации данных
+  /auth/logout:
+    get:
+      tags:
+        - auth
+      summary: Выход из учетной записи
+      responses:
+        '200':
+          description: Успешный выход
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                     type: string
+      security:
+        - BearerAuth: []
+  /email/verify:
+    get:
+      tags:
+        - auth
+      summary: Валидация профиля
+      parameters:
+        - in: query
+          name: token
+          schema:
+            type: string
+            example: ZXlKcGRpSTZJbGR5VGpoU2RXRllSM0UwYkc1MGJqRnJiRkoyYVhjOVBTSXNJblpoYkhWbElqb2llVEp5WjNkbWJEZGtSMUZQSzJaUU5UaHhORmRuUTFoWGVtNXRXV3RPYUdKdlQzTklaVE12UkVGeVp6MGlMQ0p0WVdNaU9pSXdNRFl6TjJGa05qbGtaalkyT1RVd016ZGtPVFExTTJGa01UY3lNVFZsT1RKbU5HTmhZalkyTVdRMU0yRmxabUZtWkROak5XRTVZekF3WVRGbU9UUmtJaXdpZEdGbklqb2lJbjA9
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserToken'
+        '403':
+          description: Ссылка истекла
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                     type: string
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                     type: string
+  /email/resend:
+    get:
+      tags:
+        - auth
+      summary: Повторная отправка письма подтверждения
+      responses:
+        '200':
+          description: Успешная отправка
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                     type: string
+      security:
+        - BearerAuth: []
+  /auth/forgot-password:
+    post:
+      tags:
+        - auth
+      summary: Отправка письма на восстановление пароля
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: example@mail.com
+        required: true
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                     type: string
+        '422':
+          description: Ошибка валидации данных
+  /auth/change-password:
+    post:
+      tags:
+        - auth
+      summary: Смена пароля
+      parameters:
+        - in: query
+          name: token
+          schema:
+            type: string
+            example: ZXlKcGRpSTZJbGR5VGpoU2RXRllSM0UwYkc1MGJqRnJiRkoyYVhjOVBTSXNJblpoYkhWbElqb2llVEp5WjNkbWJEZGtSMUZQSzJaUU5UaHhORmRuUTFoWGVtNXRXV3RPYUdKdlQzTklaVE12UkVGeVp6MGlMQ0p0WVdNaU9pSXdNRFl6TjJGa05qbGtaalkyT1RVd016ZGtPVFExTTJGa01UY3lNVFZsT1RKbU5HTmhZalkyTVdRMU0yRmxabUZtWkROak5XRTVZekF3WVRGbU9UUmtJaXdpZEdGbklqb2lJbjA9
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  example: new_password
+                password_confirmation:
+                  type: string
+                  example: new_password
+        required: true
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserToken'
+        '403':
+          description: Ссылка истекла
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                     type: string
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                     type: string
+  /auth/{provider}/redirect:
+    get:
+      tags:
+        - auth
+      summary: Получение ссылки на вход через соц. сеть
+      parameters:
+        - in: path
+          name: provider
+          schema:
+            type: string
+            example: google
+          required: true
+          description: "Один из провайдеров: google | facebook"
+      responses:
+        '200':
+          description: Ссылка на вход. После авторизации в ней присылается {token}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  redirect_url:
+                    type: string
+                    example: https://accounts.google.com/o/oauth2/auth?scope=openid+profile+email&response_type=code
+  /user:
+    get:
+      tags:
+        - user
+      summary: Список пользователей
+      responses:
+        default:
+          description: Пагинированный список
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersList'
+                
+      security:
+          - BearerAuth: []
+    post:
+      tags:
+        - user
+      summary: Создание пользователя
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                     type: string
+                  entity:
+                    $ref: '#/components/schemas/User'
+        '422':
+          description: Ошибка валидации данных
+      security:
+          - BearerAuth: []
+  /user/{id}:
+    get:
+      tags:
+        - user
+      summary: Получить информацию о пользователе
+      parameters:
+        - name: id
+          in: path
+          description: 'Айди пользователя'
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entity:
+                    $ref: '#/components/schemas/User'   
+        '404':
+          description: Пользователь не найден
+      security:
+          - BearerAuth: []
+    put:
+      tags:
+        - user
+      summary: Обновление всех данных
+      parameters:
+        - name: id
+          in: path
+          description: 'Айди пользователя'
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                 type: string
+                 example: password
+                email:
+                  type: string
+                  example: example@mail.com
+                name:
+                  type: string
+                  example: Username
+                role_id[]:
+                  description: Массив ролей пользователя
+                  type: integer
+                  example: 2
+        required: true
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                     type: string
+                  old_entity:
+                    $ref: '#/components/schemas/User'
+                  new_entity:
+                    $ref: '#/components/schemas/User'
+        '404':
+          description: Пользователь не найден
+        '422':
+          description: Ошибка валидации данных
+      security:
+          - BearerAuth: []
+    patch:
+      tags:
+        - user
+      summary: Обновление частичных данных
+      parameters:
+        - name: id
+          in: path
+          description: 'Айди пользователя'
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                 type: string
+                 example: password
+                email:
+                  type: string
+                  example: example@mail.com
+                name:
+                  type: string
+                  example: Username
+                role_id[]:
+                  description: Массив ролей пользователя
+                  type: integer
+                  example: 2
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                     type: string
+                  old_entity:
+                    $ref: '#/components/schemas/User'
+                  new_entity:
+                    $ref: '#/components/schemas/User'
+        '404':
+          description: Пользователь не найден
+        '422':
+          description: Ошибка валидации данных
+      security:
+          - BearerAuth: []
+    delete:
+      tags:
+        - user
+      summary: Удаление пользователя
+      parameters:
+        - name: id
+          in: path
+          description: 'Айди пользователя'
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешно
+        '404':
+          description: Пользователь не найден
+      security:
+          - BearerAuth: []
+  /user/info:
+    get:
+      tags:
+        - user
+      summary: Информация об авторизованном пользователе
+      responses:
+        default:
+          description: Пользователь
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entity:
+                    $ref: '#/components/schemas/User'
+                  roles[]:
+                    type: object
+                  groups[]:
+                    type: object
+                  links[]:
+                    type: object
+      security:
+          - BearerAuth: []
+  /links:
+    get:
+      tags:
+        - links
+      summary: Список ссылок
+      responses:
+        default:
+          description: Пагинированный список
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinksList'
+      security:
+          - BearerAuth: []
+    post:
+      tags:
+        - links
+      summary: Создание ссылки
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: yandex
+                description:
+                  type: string
+                  example: Redirecto to yandex
+                origin:
+                  type: string
+                  example: https://ya.ru/
+                group_id:
+                  description: Группа ссылки
+                  type: integer
+                  example: 2
+        required: true
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                     type: string
+                  entity:
+                    $ref: '#/components/schemas/Link'
+        '422':
+          description: Ошибка валидации данных
+      security:
+          - BearerAuth: []
+  /links/{id}:
+    get:
+      tags:
+        - links
+      summary: Получить информацию о ссылке
+      parameters:
+        - name: id
+          in: path
+          description: 'Айди ссылки'
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entity:
+                    $ref: '#/components/schemas/Link'   
+        '404':
+          description: Ссылка не найдена
+      security:
+          - BearerAuth: []
+    put:
+      tags:
+        - links
+      summary: Обновление всех данных
+      parameters:
+        - name: id
+          in: path
+          description: 'Айди ссылки'
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: yandex
+                description:
+                  type: string
+                  example: Redirecto to yandex
+                origin:
+                  type: string
+                  example: https://ya.ru/
+                referral:
+                  type: string
+                  example: 3r2dasf44s
+                group_id[]:
+                  description: Массив групп ссылки
+                  type: integer
+                  example: 2
+        required: true
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                     type: string
+                  old_entity:
+                    $ref: '#/components/schemas/Link'
+                  new_entity:
+                    $ref: '#/components/schemas/Link'
+        '404':
+          description: Ссылка не найдена
+        '422':
+          description: Ошибка валидации данных
+      security:
+          - BearerAuth: []
+    patch:
+      tags:
+        - links
+      summary: Обновление частичных данных
+      parameters:
+        - name: id
+          in: path
+          description: 'Айди ссылки'
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: yandex
+                description:
+                  type: string
+                  example: Redirecto to yandex
+                origin:
+                  type: string
+                  example: https://ya.ru/
+                referral:
+                  type: string
+                  example: 3r2dasf44s
+                group_id[]:
+                  description: Массив групп ссылки
+                  type: integer
+                  example: 2
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                     type: string
+                  old_entity:
+                    $ref: '#/components/schemas/Link'
+                  new_entity:
+                    $ref: '#/components/schemas/Link'
+        '404':
+          description: Ссылка не найдена
+        '422':
+          description: Ошибка валидации данных
+      security:
+          - BearerAuth: []
+    delete:
+      tags:
+        - links
+      summary: Удаление ссылки
+      parameters:
+        - name: id
+          in: path
+          description: 'Айди ссылки'
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешно
+        '404':
+          description: Ссылка не найдена
+      security:
+          - BearerAuth: []
+  /l/{referral}:
+    get:
+      tags:
+        - links
+      summary: Переход по реферальной ссылке
+      parameters:
+        - name: referral
+          in: path
+          description: 'Айди реферальной ссылки'
+          required: true
+          schema:
+            type: string
+            example: wkaqZ6SZkP
+      responses:
+        '200':
+          description: Редирект на origin из БД
+        '404':
+          description: Ссылка не найдена
+  /groups:
+    get:
+      tags:
+        - groups
+      summary: Список групп
+      responses:
+        default:
+          description: Пагинированный список
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupsList'
+      security:
+          - BearerAuth: []
+    post:
+      tags:
+        - groups
+      summary: Создание группы
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: PrivateGroup
+                description:
+                  type: string
+                  example: description
+        required: true
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                     type: string
+                  entity:
+                    $ref: '#/components/schemas/Group'
+        '422':
+          description: Ошибка валидации данных
+      security:
+          - BearerAuth: []
+  /groups/{id}:
+    get:
+      tags:
+        - groups
+      summary: Получить информацию о группе
+      parameters:
+        - name: id
+          in: path
+          description: 'Айди группы'
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entity:
+                    $ref: '#/components/schemas/Group'   
+        '404':
+          description: Группа не найдена
+      security:
+          - BearerAuth: []
+    put:
+      tags:
+        - groups
+      summary: Обновление всех данных
+      parameters:
+        - name: id
+          in: path
+          description: 'Айди группы'
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: PrivateGroup
+                description:
+                  type: string
+                  example: description
+        required: true
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                     type: string
+                  old_entity:
+                    $ref: '#/components/schemas/Group'
+                  new_entity:
+                    $ref: '#/components/schemas/Group'
+        '404':
+          description: Группа не найдена
+        '422':
+          description: Ошибка валидации данных
+      security:
+          - BearerAuth: []
+    patch:
+      tags:
+        - groups
+      summary: Обновление частичных данных
+      parameters:
+        - name: id
+          in: path
+          description: 'Айди группы'
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: PrivateGroup
+                description:
+                  type: string
+                  example: description
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                     type: string
+                  old_entity:
+                    $ref: '#/components/schemas/Group'
+                  new_entity:
+                    $ref: '#/components/schemas/Group'
+        '404':
+          description: Группа не найдена
+        '422':
+          description: Ошибка валидации данных
+      security:
+          - BearerAuth: []
+    delete:
+      tags:
+        - groups
+      summary: Удаление группы
+      parameters:
+        - name: id
+          in: path
+          description: 'Айди группы'
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешно
+        '404':
+          description: Группа не найдена
+      security:
+          - BearerAuth: []
+  /permissions:
+    get:
+      tags:
+        - permissions
+      summary: Список прав
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Permission'
+      security:
+        - BearerAuth: []
+  /permissions/{id}:
+    get:
+      tags:
+        - permissions
+      summary: Получить информацию о праве
+      parameters:
+        - name: id
+          in: path
+          description: 'Айди права'
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Permission'
+        '404':
+          description: Право не найдена
+      security:
+          - BearerAuth: []
+  /permissions/sync:
+    post:
+      tags:
+        - permissions
+      summary: Установить права для роли
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role_id:
+                  type: integer
+                  example: 1
+                permissions[]:
+                  type: integer
+                  example: 1
+        required: true
+      responses:
+        '200':
+          description: Успешно
+        '422':
+          description: Ошибка валидации данных
+      security:
+          - BearerAuth: []
+components:
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      
+  schemas:
+    LoginRequest:
+      required:
+        - email
+        - password
+      type: object
+      properties:
+        email:
+          type: string
+          example: example@mail.com
+        password:
+          type: string
+          example: password
+    RegisterRequest:
+      required:
+        - email
+        - password
+        - password_confirmation
+        - name
+      type: object
+      properties:
+        email:
+          type: string
+          example: example@mail.com
+        password:
+          type: string
+          example: password
+        password_confirmation:
+          type: string
+          example: password
+        name:
+          type: string
+          example: Example
+          
+    UserToken:
+      type: object
+      properties:
+        token:
+          type: string
+          example: tl3waWcgC7o1oORhpZzjBnWcoz130pCgYjVWrX1f0ff6cfee
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: User
+        email:
+          type: string
+          example: user@email.com
+        email_verified_at:
+          type: string
+          example: 2023-08-29T11:25:56.000000Z
+        created_at:
+          type: string
+          example: 2023-08-29T11:25:56.000000Z
+        updated_at:
+          type: string
+          example: 2023-08-29T11:25:56.000000Z
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Info
+    Link:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: yandex
+        description:
+          type: string
+          example: redirect to yandex
+        origin:
+          type: string
+          example: https://ya.ru/
+        referral:
+          type: string
+          example: wqd8BemaHb
+        created_at:
+          type: string
+          example: 2023-08-29T11:25:56.000000Z
+        updated_at:
+          type: string
+          example: 2023-08-29T11:25:56.000000Z
+    Group:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Example
+        description:
+          type: string
+          example: description
+        created_at:
+          type: string
+          example: 2023-08-29T11:25:56.000000Z
+        updated_at:
+          type: string
+          example: 2023-08-29T11:25:56.000000Z
+    Permission:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: example--create
+        guard_name:
+          type: string
+          example: web
+        description:
+          type: string
+          example: description
+        created_at:
+          type: string
+          example: 2023-08-29T11:25:56.000000Z
+        updated_at:
+          type: string
+          example: 2023-08-29T11:25:56.000000Z
+          
+    UsersList:
+      type: object
+      properties:
+        current_page:
+          type: integer
+          example: 1
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        first_page_url:
+          type: string
+          example: "http://hid-url.com/user?page=1"
+        from:
+          type: integer
+          example: 1
+        last_page:
+          type: integer
+          example: 2
+        link:
+          type: array
+          description: Массив кнопок для страниц
+          items:
+            $ref: '#/components/schemas/PaginateButtons'
+        last_page_url:
+          type: string
+          example: "http://hid-url.com/user?page=2"
+        next_page_url:
+          type: string
+          example: "http://hid-url.com/user?page=2"
+        path:
+          type: string
+          example: "http://hid-url.com/user"
+        per_page:
+          type: integer
+          example: 10
+        prev_page_url:
+          type: string
+          example: null
+        to:
+          type: integer
+          example: 10
+        total:
+          type: integer
+          example: 223
+          
+    LinksList:
+      type: object
+      properties:
+        current_page:
+          type: integer
+          example: 1
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+        first_page_url:
+          type: string
+          example: "http://hid-url.com/links?page=1"
+        from:
+          type: integer
+          example: 1
+        last_page:
+          type: integer
+          example: 2
+        link:
+          type: array
+          description: Массив кнопок для страниц
+          items:
+            $ref: '#/components/schemas/PaginateButtons'
+        last_page_url:
+          type: string
+          example: "http://hid-url.com/links?page=2"
+        next_page_url:
+          type: string
+          example: "http://hid-url.com/links?page=2"
+        path:
+          type: string
+          example: "http://hid-url.com/links"
+        per_page:
+          type: integer
+          example: 10
+        prev_page_url:
+          type: string
+          example: null
+        to:
+          type: integer
+          example: 10
+        total:
+          type: integer
+          example: 223
+          
+    GroupsList:
+      type: object
+      properties:
+        current_page:
+          type: integer
+          example: 1
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+        first_page_url:
+          type: string
+          example: "http://hid-url.com/groups?page=1"
+        from:
+          type: integer
+          example: 1
+        last_page:
+          type: integer
+          example: 2
+        link:
+          type: array
+          description: Массив кнопок для страниц
+          items:
+            $ref: '#/components/schemas/PaginateButtons'
+        last_page_url:
+          type: string
+          example: "http://hid-url.com/groups?page=2"
+        next_page_url:
+          type: string
+          example: "http://hid-url.com/groups?page=2"
+        path:
+          type: string
+          example: "http://hid-url.com/groups"
+        per_page:
+          type: integer
+          example: 10
+        prev_page_url:
+          type: string
+          example: null
+        to:
+          type: integer
+          example: 10
+        total:
+          type: integer
+          example: 223
+          
+    PaginateButtons:
+      type: object
+      properties:
+        url:
+          type: string
+          example: http://hid-url.com/user?page=2
+        label:
+          type: string
+          example: Next
+        active:
+          type: boolean
+          example: true
+
