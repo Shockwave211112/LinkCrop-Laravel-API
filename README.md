@@ -72,7 +72,7 @@ docker compose -f ./docker/local/docker-compose.yml up -d
 
 По умолчанию в контейнере php-queue в docker-compose указан entrypoint на следующие команды при запуске:
 ```shell
-composer update
+composer install
 
 php artisan key:generate
 
