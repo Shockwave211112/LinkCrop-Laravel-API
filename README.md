@@ -1,5 +1,5 @@
-# Links
-https://dev-be.linkcrop.org/
+# API сервиса по сокращению ссылок
+
 >Laravel v10.26.2
 >
 >PHP 8.1
