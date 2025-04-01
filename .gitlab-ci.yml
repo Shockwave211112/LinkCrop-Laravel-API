@@ -1,0 +1,60 @@
+stages:
+  - build
+  - test
+  - delivery
+  - deploy
+
+build-job:
+  stage: build
+  script:
+    - rm -rf /home/links/testing/*
+    - rsync -av --exclude='.git' ./ /home/links/testing
+    - cd /home/links/testing
+    - cat $test_env > .env
+    - docker container prune -f
+    - docker image prune -af
+    - docker compose -f docker/testing/docker-compose.yml down
+    - docker compose -f docker/testing/docker-compose.yml build
+  rules:
+    - if: '$CI_COMMIT_REF_NAME != "main"
+    && $CI_PIPELINE_SOURCE == "merge_request_event"'
+
+test-job:
+  stage: test
+  script:
+    - cd /home/links/testing
+    - docker compose -f docker/testing/docker-compose.yml up --abort-on-container-exit
+  rules:
+    - if: '$CI_COMMIT_REF_NAME != "main"
+    && $CI_PIPELINE_SOURCE == "merge_request_event"'
+
+delivery-job:
+  stage: delivery
+  when: manual
+  script:
+    - rm -rf /home/links/stage/*
+    - rsync -av --exclude='.git' ./ /home/links/stage
+    - cd /home/links/stage
+    - cat $dev_env > .env
+    - mkdir -p bootstrap/cache
+    - mkdir -p storage/framework/cache
+    - mkdir -p storage/framework/views
+    - mkdir -p storage/framework/sessions
+  rules:
+    - if: '$CI_COMMIT_REF_NAME != "main"
+    && $CI_PIPELINE_SOURCE == "merge_request_event"'
+
+deploy-job:
+  stage: deploy
+  when: manual
+  script:
+    - cd /home/links/stage
+    - mkdir vendor
+    - docker compose -f docker/stage/docker-compose.yml down
+    - docker container prune -f
+    - docker image prune -af
+    - docker compose -f docker/stage/docker-compose.yml build
+    - docker compose -f docker/stage/docker-compose.yml up -d
+  rules:
+    - if: '$CI_COMMIT_REF_NAME != "main"
+    && $CI_PIPELINE_SOURCE == "merge_request_event"'
