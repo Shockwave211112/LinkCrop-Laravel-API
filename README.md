@@ -1,105 +1,93 @@
-# Links
+# 🔗 LinkCrop Laravel API
 
->Laravel v10.26.2
->
->PHP 8.1
->
->Spattie Permissions
->
->L5-Swagger Documentation
->
->Разделение проекта на модули (App -> Modules, ModuleServiceProvider)
->
->Унифицированный CRUD репозиторий
->
->Кэширование GET запросов (GlobalObserverProvider & CacheObserver)
->
->Автозаполнение таблицы прав из контроллеров
->
->CRUD & Permissions traits
->
->Кастомные ошибки
->
->Вся логика вынесена из контроллеров в сервисы
->
->Google & Facebook auth
->
->Gitlab CI/CD
+[![Laravel](https://img.shields.io/badge/Laravel-10.x-ff2d20.svg)](https://laravel.com)
+[![PHP](https://img.shields.io/badge/PHP-8.1-777bb4.svg)](https://php.net)
+[![Swagger](https://img.shields.io/badge/Swagger-L5-85ea2d.svg)](https://swagger.io)
+[![Docker](https://img.shields.io/badge/Docker-Supported-blue.svg)](https://www.docker.com)
 
-Docker-контейнеры:
-* local
-* testing
-* stage
+REST API для сервиса сокращения ссылок с модульной архитектурой, кэшированием и системой прав доступа.
 
-Local: Настроен на локальный запуск по адресу http://localhost:8000
+## 📌 О проекте
 
-Документация: http://"site url"/api/docs
+Бэкенд-часть сервиса LinkCrop — API для управления сокращёнными ссылками. Архитектура построена по модульному принципу с выносом логики в сервисы. Поддерживает аутентификацию через Google и Facebook, документирован через Swagger/OpenAPI.
 
-## Неообходимо
+### 🌟 Ключевые особенности
+*   🧩 **Модульная архитектура** — разделение на `Auth`, `Core`, `Links`, `Users`
+*   🔐 **RBAC (Role-Based Access Control)** — Spatie Permissions
+*   📝 **Автоматическая документация** — L5-Swagger (/api/docs)
+*   ⚡ **Умное кэширование** — кэширование GET-запросов через кастомные Middleware/Observer
+*   🔄 **Унифицированный CRUD** — базовый репозиторий для всех сущностей
+*   🚀 **OAuth 2.0** — вход через Google и Facebook
+*   🤖 **Gitlab CI/CD** — пайплайн для автоматизации
 
-* Docker
+## 🛠️ Технологический стек
 
-## OAuth
+| Технология         | Версия   | Назначение                      |
+|:-------------------|:---------| :------------------------------ |
+| Laravel            | v10.26.2 | Основной фреймворк              |
+| PHP                | 8.1      | Язык программирования           |
+| PostgreSQL         | -        | База данных                     |
+| Redis              | -        | Кэширование
+| Spatie Permissions | ^5       | Управление ролями и правами     |
+| L5-Swagger         | ^8       | Документация API                |
+| Docker             | -        | Контейнеризация                 |
 
-Переход по */auth/google/redirect возвращает ссылку на вход, на которую нужно редиректнуть. Например: {"
-redirect_url": "https://auth.provider.url"}
+## 📁 Архитектура и структура
 
-После авторизации на сайте (https://auth.provider.url), происходит редирект на указанный в .env путь с токеном в куки.
-
-## Запуск
-
-Скопировать проект в папку, создать .env файл:
-```shell
-cp .env.example .env
+Проект разделён на модули, расположенные в `app/Modules/`:
 ```
-Настроить .env файл. Необходимые поля:
-* APP_FRONT_URL
-* ADMIN_EMAIL
-* ADMIN_PWD
-* BASIC_USER_EMAIL
-* BASIC_USER_PWD
-* GOOGLE_CLIENT_ID
-* GOOGLE_CLIENT_SECRET
-* FACEBOOK_CLIENT_ID
-* FACEBOOK_CLIENT_SECRET
-* Поля MAIL'ера
-
-Запустить контейнеры локально:
-```shell
-docker compose -f ./docker/local/docker-compose.yml up -d
+app/Modules/
+├── Auth/ # Аутентификация (OAuth, регистрация, сброс пароля)
+├── Core/ # Ядро (базовые классы, трейты, хелперы, Middleware)
+├── Users/ # Пользователи
+└── Links/ # Основной модуль управления ссылками и группами
 ```
 
-По умолчанию в контейнере php-queue в docker-compose указан entrypoint на следующие команды при запуске:
-```shell
-composer update
+## 🚀 Быстрый старт
 
-php artisan key:generate
+### Предварительные требования
+*   Docker и Docker Compose
+*   Свободные порты: `8000` (API), `5432` (PostgreSQL)
 
-php artisan optimize:clear
+### Запуск через Docker
+1.  Склонировать репозиторий, создать .env и заполнить полями и пункта "Переменные окружения":
+    ```
+    cp .env.example .env
+    ```
+2.  Запустить контейнеры
+    ```
+    docker compose -f ./docker/local/docker-compose.yml up -d
+    ```
 
-php artisan optimize
+После запуска API будет доступен по адресу http://localhost:8000.
+Документация Swagger: http://localhost:8000/api/docs
 
-php artisan migrate:fresh --force
-
-php artisan db:seed --force
-
-php artisan queue:work
+### 🔧 Первоначальная настройка прав
+После первого запуска и миграций необходимо синхронизировать права для обычных пользователей.
+Зайдите в интерфейс под админом и в разделе администрирования во вкладке "Права" дайте нужные права пользователям. Либо же выполните запрос к endpoint:
+```
+POST /api/permissions/sync
+{
+    "role_id": 2, #basic users
+    "permissions": []
+}
 ```
 
-## После запуска необходимо выдать права обычным пользователям (/permissions/sync)
-Приблизительный список необходимых для работы прав:
+Рекомендуемый набор прав: 
 ```
 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
 ```
 
-## Дополнительно
+## ⚙️ Переменные окружения (.env)
 
-По умолчанию каждый запуск стирает БД. Для сохранения данных после первого запуска в ./local/docker-compose.yml заменить:
-```shell
-command: [ "./docker/entrypoint.sh" ]
-```
-
-На:
-```shell
-command: php artisan queue:work
-```
+| Переменная               | Описание                                        | Пример                  |
+| :----------------------- |:------------------------------------------------|:------------------------|
+| `APP_FRONT_URL`          | URL фронтенд-приложения                         | `http://localhost:8000` |
+| `ADMIN_EMAIL`            | Email администратора                            | `admin@example.com`     |
+| `ADMIN_PWD`              | Пароль администратора                           | `secret123`             |
+| `BASIC_USER_EMAIL`       | Email тестового пользователя                    | `user@example.com`      |
+| `BASIC_USER_PWD`         | Пароль тестового пользователя                   | `user123`               |
+| `GOOGLE_CLIENT_ID`       | Client ID для Google OAuth                      | -                       |
+| `GOOGLE_CLIENT_SECRET`   | Client Secret для Google OAuth                  | -                       |
+| `FACEBOOK_CLIENT_ID`     | App ID для Facebook OAuth                       | -                       |
+| `FACEBOOK_CLIENT_SECRET` | App Secret для Facebook OAuth                   | -                       |
