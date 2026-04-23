@@ -3,6 +3,7 @@ version: '3'
 networks:
     frontend:
         external: true
+        name: front_shared
     backend:
 
 services:
@@ -53,7 +54,7 @@ services:
             - redis
         networks:
             - backend
-        command: [ "./docker/local/entrypoint.sh" ]
+        command: [ "./docker/local-withfront/entrypoint.sh" ]
     postgres:
         image: postgres:15.4-alpine
         restart: always
